@@ -11,6 +11,9 @@ build:
 pull:
 	@docker-compose pull
 
+makemigrations:
+	@docker-compose run --rm web python manage.py makemigrations
+
 migrate:
 	@docker-compose run --rm web python manage.py migrate
 
@@ -31,4 +34,4 @@ down:
 
 setup: build migrate index testdata run
 
-.PHONY: default build pull migrate index testdata run down setup up
+.PHONY: default build pull makemigrations migrate index testdata run down setup up
