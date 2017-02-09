@@ -5,14 +5,14 @@ from django.contrib.sessions.models import Session
 from rest_framework import viewsets, status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import list_route
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.response import Response
 from rest_framework.parsers import JSONParser, MultiPartParser
 
 from lily.tenant.api.mixins import SetTenantUserMixin
 from .serializers import TeamSerializer, LilyUserSerializer, LilyUserTokenSerializer
-from ..models import Team, LilyUser
+from ..models import Team, LilyUser, UserInfo
 
 
 class TeamFilter(FilterSet):
@@ -156,6 +156,17 @@ class LilyUserViewSet(SetTenantUserMixin, viewsets.ModelViewSet):
 
         serializer = LilyUserTokenSerializer(request.user)
 
+        return Response(serializer.data)
+
+    @list_route(methods=['PATCH'])
+    def skip(self, request, pk=None):
+        """
+        """
+        user = self.request.user
+        user.info.email_account_status = UserInfo.SKIPPED
+        user.info.save();
+
+        serializer = self.get_serializer(user, partial=True)
         return Response(serializer.data)
 
     def partial_update(self, request, *args, **kwargs):

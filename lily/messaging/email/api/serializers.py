@@ -1,10 +1,14 @@
 from django.db.models import Q
+from oauth2client.contrib.django_orm import Storage
 from rest_framework import serializers
 
 from lily.api.fields import DynamicQuerySetPrimaryKeyRelatedField
 from lily.api.nested.mixins import RelatedSerializerMixin
+from lily.users.models import UserInfo
+
 from ..models.models import (EmailLabel, EmailAccount, EmailMessage, Recipient, EmailAttachment, EmailTemplate,
-                             SharedEmailConfig, TemplateVariable, DefaultEmailTemplate)
+                             SharedEmailConfig, TemplateVariable, DefaultEmailTemplate, GmailCredentialsModel)
+from ..services import build_gmail_service
 
 
 class SharedEmailConfigSerializer(serializers.ModelSerializer):
@@ -66,22 +70,81 @@ class EmailMessageSerializer(serializers.ModelSerializer):
 
 
 class EmailAccountSerializer(serializers.ModelSerializer):
-    email_address = serializers.ReadOnlyField()
     labels = EmailLabelSerializer(many=True, read_only=True)
     is_public = serializers.BooleanField()
+    # only_new = serializers.SerializerMethodField()
+
+    def update(self, instance, validated_data):
+        user = self.context.get('request').user
+        shared_with_users = validated_data.get('shared_with_users')
+
+        if shared_with_users:
+            instance.shared_with_users.clear()
+            instance.save()
+
+            for user_id in shared_with_users:
+                if user_id == request.user.id:
+                    raise serializers.ValidationError({
+                        'shared_with_users': _('Can\'t share your email account with yourself')
+                    })
+
+                shared_with_user = LilyUser.objects.get(id=user_id, tenant=user.tenant)
+                instance.shared_with_users.add(shared_with_user)
+
+        if not instance.is_authorized or 'only_new' in validated_data:
+            only_new = validated_data.get('only_new')
+            # Store credentials based on new email account.
+            storage = Storage(GmailCredentialsModel, 'id', instance, 'credentials')
+            credentials = storage.get()
+
+            # Setup service to retrieve email address.
+            service = build_gmail_service(credentials)
+            profile = service.users().getProfile(userId='me').execute()
+
+            if credentials:
+                instance.is_authorized = True
+
+            if only_new:
+                instance.history_id = profile.get('historyId')
+                instance.full_sync_finished = True
+
+            instance.save()
+
+        if user.info.email_account_status == UserInfo.INCOMPLETE:
+            user.info.email_account_status = UserInfo.COMPLETE
+            user.info.save()
+
+        # account.label = account.label or account.email_address
+        # account.from_name = account.from_name or ' '.join(account.email_address.split('@')[0].split('.')).title()
+
+        # set_to_public = bool(int(state.get('is_public')))
+        # if set_to_public:
+        #     account.privacy = EmailAccount.PUBLIC
+
+        # only_sync_new_mails = bool(int(state.get('only_new')))
+        # if only_sync_new_mails and created:
+        #     # Setting it before the first sync means it will only fetch changes starting now.
+        #     account.history_id = profile.get('historyId')
+        #     account.full_sync_finished = True
+
+        return super(EmailAccountSerializer, self).update(instance, validated_data)
 
     class Meta:
         model = EmailAccount
         fields = (
             'id',
             'email_address',
-            'labels',
-            'label',
-            'is_public',
-            'shared_with_users',
-            'is_authorized',
+            'from_name',
             'full_sync_finished',
+            'label',
+            'labels',
+            'is_authorized',
+            'is_public',
+            # 'only_new'
+            'privacy',
+            'shared_with_users',
         )
+    read_only_field = ('email_address', 'is_authorized', 'full_sync_finished', 'is_public',)
 
 
 class RelatedEmailAccountSerializer(RelatedSerializerMixin, EmailAccountSerializer):
@@ -111,16 +174,6 @@ class EmailTemplateSerializer(serializers.ModelSerializer):
         return queryset
 
     default_for = DynamicQuerySetPrimaryKeyRelatedField(many=True, queryset=get_default_for_queryset)
-
-    class Meta:
-        model = EmailTemplate
-        fields = (
-            'id',
-            'name',
-            'subject',
-            'body_html',
-            'default_for',
-        )
 
     def create(self, validated_data):
         default_for = validated_data.pop('default_for')
@@ -181,6 +234,16 @@ class EmailTemplateSerializer(serializers.ModelSerializer):
             ).delete()
 
         return super(EmailTemplateSerializer, self).update(instance, validated_data)
+
+    class Meta:
+        model = EmailTemplate
+        fields = (
+            'id',
+            'name',
+            'subject',
+            'body_html',
+            'default_for',
+        )
 
 
 class TemplateVariableSerializer(serializers.ModelSerializer):

@@ -14,7 +14,7 @@ from django.views.generic import FormView
 from django.views.generic.base import View, TemplateView, RedirectView
 
 from lily.messaging.email.models.models import EmailAttachment
-from lily.users.models import LilyUser
+from lily.users.models import LilyUser, UserInfo
 from lily.utils.models.models import PhoneNumber
 from ..forms import SugarCsvImportForm
 from ..tasks import import_sugar_csv

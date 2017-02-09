@@ -1,0 +1,51 @@
+$base-color: #27224e;
+
+.privacy-radios {
+    color: $base-color;
+    display: flex;
+    justify-content: space-between;
+
+    .option-container {
+        flex: 1;
+    }
+
+    label {
+        height: 75px;
+        border: 1px solid $app-border-color;
+        border-radius: 3px;
+        width: 100%;
+        text-align: center;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        small {
+            display: block;
+            color: #b5b5b5;
+        }
+
+        small:before {
+            content: '(';
+        }
+
+        small:after {
+            content: ')';
+        }
+    }
+
+    > .option-container ~ .option-container {
+        margin-left: 5px;
+    }
+
+    input[type=radio]:checked ~ label {
+        border: 2px solid $base-color;
+        padding-top: -1px;
+    }
+
+    input {
+        &[type="radio"] {
+            display: none;
+        }
+    }
+}

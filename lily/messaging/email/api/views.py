@@ -71,7 +71,7 @@ class EmailAccountViewSet(mixins.DestroyModelMixin,
                           mixins.UpdateModelMixin,
                           viewsets.ReadOnlyModelViewSet):
 
-    queryset = EmailLabel.objects.all()
+    queryset = EmailAccount.objects.all()
     serializer_class = EmailAccountSerializer
 
     # Set all filter backends that this viewset uses.

@@ -24,7 +24,7 @@ from lily.utils.functions import is_ajax, post_intercom_event
 
 from .forms import (CustomAuthenticationForm, RegistrationForm, ResendActivationForm, InvitationForm,
                     InvitationFormset, UserRegistrationForm)
-from .models import LilyUser
+from .models import LilyUser, UserInfo
 
 
 class RegistrationView(FormView):
@@ -51,13 +51,17 @@ class RegistrationView(FormView):
             messages.error(self.request, _('I\'m sorry, but I can\'t let anyone register at the moment.'))
             return redirect(reverse_lazy('login'))
 
+        # Create default onboarding info.
+        user_info = UserInfo.objects.create()
+
         # Create and save user
         user = LilyUser.objects.create_user(
             email=form.cleaned_data['email'],
             password=form.cleaned_data['password'],
             first_name=form.cleaned_data['first_name'],
             last_name=form.cleaned_data['last_name'],
-            position=form.cleaned_data['position']
+            position=form.cleaned_data['position'],
+            info=user_info,
         )
 
         user.is_active = False

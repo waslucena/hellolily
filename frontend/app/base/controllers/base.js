@@ -12,10 +12,14 @@ function appConfig($stateProvider) {
 
 angular.module('app.base').controller('BaseController', BaseController);
 
-BaseController.$inject = ['$scope', '$state', '$http', 'AppHash', 'Settings', 'HLShortcuts'];
-function BaseController($scope, $state, $http, AppHash, Settings, HLShortcuts) {
+BaseController.$inject = ['$scope', '$state', '$http', 'AppHash', 'Settings', 'HLShortcuts', 'User'];
+function BaseController($scope, $state, $http, AppHash, Settings, HLShortcuts, User) {
     // Make sure the settings are available everywhere.
     $scope.settings = Settings;
+
+    User.me().$promise.then(function(response) {
+        $scope.settings.currentUser = response;
+    });
 
     $scope.loadNotifications = loadNotifications;
 

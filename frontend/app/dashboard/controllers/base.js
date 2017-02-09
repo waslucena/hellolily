@@ -14,17 +14,26 @@ function dashboardConfig($stateProvider) {
         ncyBreadcrumb: {
             label: 'Dashboard',
         },
+        resolve: {
+            user: ['User', function(User) {
+                return User.me().$promise;
+            }],
+        },
     });
 }
 
 angular.module('app.dashboard').controller('DashboardController', DashboardController);
 
 DashboardController.$inject = ['$compile', '$scope', '$state', '$templateCache', '$timeout', 'LocalStorage',
-    'Settings', 'Tenant'];
+    'Settings', 'Tenant', 'user'];
 function DashboardController($compile, $scope, $state, $templateCache, $timeout, LocalStorage,
-                             Settings, Tenant) {
+                             Settings, Tenant, user) {
     var db = this;
     var storage = new LocalStorage($state.current.name + 'widgetInfo');
+
+    if (user.info !== null && !user.info.email_account_status) {
+        $state.go('base.preferences.emailaccounts.setup');
+    }
 
     db.widgetSettings = storage.get('', {});
 

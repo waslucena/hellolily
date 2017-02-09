@@ -21,6 +21,12 @@ function EmailAccount($resource) {
             update: {
                 method: 'PUT',
             },
+            patch: {
+                method: 'PATCH',
+                params: {
+                    id: '@id',
+                },
+            },
             shareWith: {
                 method: 'POST',
                 url: '/api/messaging/email/accounts/:id/shared/',
@@ -52,10 +58,10 @@ function EmailAccount($resource) {
     function getPrivacyOptions() {
         // Hardcoded because these are the only privacy options.
         return [
-            {id: 0, name: 'Public'},
-            {id: 1, name: 'Read only'},
-            {id: 2, name: 'Metadata'},
-            {id: 3, name: 'Private'},
+            {id: 0, name: 'Public', text: 'sending and reading'},
+            {id: 1, name: 'Read only', text: 'read only'},
+            {id: 2, name: 'Metadata', text: 'title, date, recipients'},
+            {id: 3, name: 'Nothing', text: 'full privacy'},
         ];
     }
 

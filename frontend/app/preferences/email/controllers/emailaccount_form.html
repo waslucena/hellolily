@@ -1,0 +1,78 @@
+<div class="row">
+    <div class="col-md-7 auto-margin">
+        <div class="portlet light">
+            <div class="portlet-title">
+                <h2>{{ vm.emailAccount.email_address }}</h2>
+
+                <form novalidate name="emailAccountForm">
+                    <form-portlet portlet-title="">
+                        <form-group label-title="From name" label-id="from_name" field="emailAccountForm.from_name">
+                            <input class="form-control" id="from_name" name="from_name" maxlength="255" placeholder="From name" type="text" ng-model="vm.emailAccount.from_name"
+                            />
+                        </form-group>
+
+                        <form-group label-title="Label for mailbox" label-id="label" field="emailAccountForm.label">
+                            <input class="form-control" id="label" name="label" maxlength="255" placeholder="Label" type="text" ng-model="vm.emailAccount.label" />
+                        </form-group>
+
+                        <div>
+                            <p>Which emails would you like to be retrieved by Lily?</p>
+                            <label class="display-block" for="all">
+                                <input type="radio" name="only_new" ng-model="vm.emailAccount.only_new" ng-value="0" id="all" />
+                                All emails (includes emails received in the past)
+                            </label>
+                        </div>
+                        <div>
+                            <label class="display-block" for"only_new">
+                                <input type="radio" name="only_new" ng-model="vm.emailAccount.only_new" ng-value="1" id="only_new" />
+                                Emails I receive from now on
+                            </label>
+                        </div>
+
+                        <uib-tabset active="active" class="lily-tabs">
+                            <uib-tab index="0" heading="Basic">
+                                <p>What information will you allow your colleagues to see?</p>
+                                <div class="privacy-radios">
+                                    <div ng-repeat="option in vm.privacyOptions" class="option-container">
+                                        <input type="radio" name="privacy" ng-model="vm.emailAccount.privacy" ng-value="{{ option.id }}" id="privacy_{{ option.id }}" />
+
+                                        <label for="privacy_{{ option.id }}" class="privacy-option display-inline-block">
+                                            <div>
+                                                {{ option.name }}
+                                                <small class="muted">{{ option.text }}</small>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </uib-tab>
+                            <uib-tab index="1" heading="Advanced">
+                                <form-group label-title="Sharing options" field="contactForm.shared_with_users">
+                                    <ui-select multiple ng-model="vm.emailAccount.shared_with_users" theme="select2" class="form-control" name="shared_with_users">
+                                        <ui-select-match placeholder="Select people to share the account with">{{ $item.full_name }}</ui-select-match>
+                                        <ui-select-choices repeat="user in vm.users | filterItems:vm.emailAccount.shared_with_users" refresh="vm.refreshUsers($select.search)" refresh-delay="300">
+                                            <div ng-bind-html="user.full_name | highlight: $select.search"></div>
+                                        </ui-select-choices>
+                                    </ui-select>
+                                </form-group>
+                            </uib-tab>
+                        </uib-tabset>
+                    </form-portlet>
+
+                    <div class="hl-form-footer">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-9 col-md-8 col-md-7 col-lg-4">
+                                <button type="button" class="btn blue" ng-click="vm.saveEmailAccount(emailAccountForm)">
+                                    <i class="fa fa-check"></i> Save
+                                </button>
+                                <button ng-if="vm.user.info.email_account_status" type="button" class="btn default" ng-click="vm.cancelEditing()">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+  </div>
+</div>
+
