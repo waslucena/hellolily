@@ -48,7 +48,7 @@ class DealWhyCustomerFactory(DjangoModelFactory):
 
 class DealWhyLostFactory(DjangoModelFactory):
     position = Sequence(int)
-    name = LazyAttribute(lambda o: faker.word())
+    name = LazyAttribute(lambda o: faker.word() if o.factory_parent.status.is_lost else "")
     tenant = SubFactory(TenantFactory)
 
     class Meta:
